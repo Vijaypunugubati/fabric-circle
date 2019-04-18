@@ -1,4 +1,4 @@
-def pat  = "go/src/github.com/hyperledger/fabric"
+def path  = "go/src/github.com/hyperledger/fabric"
 
 pipeline {
     agent any
@@ -7,25 +7,65 @@ pipeline {
       {
       //To Ristrict the number of builds to be visible on jenkins
       // we don't fill up our storage!
-      buildDiscarder(logRotator(numToKeepStr:'15'))
-      
+      buildDiscarder(logRotator(numToKeepStr:'15', artifactNumToKeepStr: '15'))
       //To Timeout
       timeout(time: 10, unit: 'MINUTES')            
       }
       
+      environment {
+        ARCH="amd64"
+        GOVER="1.11.5"
+        GOROOT="${env.WORKSPACE}/go${env.GOVER}/go"
+        GOPATH="${env.WORKSPACE}/go"
+        PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:${env.GOROOT}/bin:${env.GOPATH}/bin"
+      }
       
       stages
       {
-      stage ('Checkout') 
-      {
-      steps {checkout scm }
-      }
-      stage ('Run Test Cases')
-      {
-      // condition should pass then only next step would run else it will skip but won't fail.
-      when  { branch 'develop'}            
-      steps { sh label: 'Running Fabric Unit Tests', script: 'echo Hello From jenkins'} 
-      }
-      }
-      }
-      
+        stage('Setup Environment') {
+            steps {
+                cleanWs deleteDirs: true
+                sh label: "Create GOROOT Directory", script: "mkdir -p go${GOVER}"
+                sh label: "Create GOPATH Directory", script: "mkdir -p go/src/github.com/hyperledger/fabric"
+                sh label: "Download Go ${env.GOVER}", script: "wget -nv https://dl.google.com/go/go${GOVER}.linux-${ARCH}.tar.gz"
+                sh label: "Extract Go ${env.GOVER}", script: "tar -C ./go${GOVER} -xzf go${GOVER}.linux-${ARCH}.tar.gz"
+                sh label: "Remove Go ${env.GOVER} tarball", script: "rm -rf go${GOVER}.linux-${ARCH}.tar.gz"
+            }
+        } 
+        stage ('Checkout') {
+            steps {checkout scm }
+        }
+        stage ('Run Test Cases') {
+        // condition should pass then only next step would run else it will skip but won't fail.
+            when { branch 'develop'}            
+                steps { dir('path')
+                    sh label: 'Running Fabric Unit Tests', script: 'make unit-test'
+                    sh label: 'Running Fabric Integration Tests', script: 'make integration-test'
+                    sh label: 'Promote to QA', script: "git checkout QA; git merge origin/develop; git push origin QA;"
+                }  
+            when { branch 'QA'}            
+                steps { dir('path')
+                    sh label: 'Running Fabric Unit Tests', script: 'make unit-test'
+                    sh label: 'Running Fabric Integration Tests', script: 'make integration-test'
+                    sh label: 'Promote to e2e', script: "git checkout e2e; git merge origin/QA; git push origin e2e;"
+                }    
+            when { branch 'e2e'}            
+                steps { dir('path')
+                    sh label: 'Running Fabric Unit Tests', script: 'make unit-test'
+                    sh label: 'Running Fabric Integration Tests', script: 'make integration-test'
+                    sh label: 'Promote to master', script: "git checkout master; git merge origin/e2e; git push origin master;"
+                }    
+            when { branch 'master'}            
+                steps { dir('path')
+                    sh label: 'Running Fabric Unit Tests', script: 'make unit-test'
+                    sh label: 'Running Fabric Integration Tests', script: 'make integration-test'        
+                }         
+        }
+      } // stages
+      post {
+        always {
+          // Archiving the .log files and ignore if empty
+          archiveArtifacts artifacts: '**/*.log', allowEmptyArchive: true
+        }
+      } // post
+} // pipeline
