@@ -23,7 +23,7 @@ pipeline {
       stage ('Run Test Cases')
       {
       // condition should pass then only next step would run else it will skip but won't fail.
-      when  { branch 'development'}            
+      when  { branch 'develop'}            
       steps { sh label: 'Running Fabric Unit Tests', script: 'print Hello From jenkins'} 
       }
       }
