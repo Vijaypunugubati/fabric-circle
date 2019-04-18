@@ -1,0 +1,32 @@
+def pat  = "go/src/github.com/hyperledger/fabric"
+
+pipeline {
+    agent any
+    
+      options 
+      {
+      //To Ristrict the number of builds to be visible on jenkins
+      // we don't fill up our storage!
+      buildDiscarder(logRotator(numToKeepStr:'15'))
+      
+      //To Timeout
+      timeout(time: 10, unit: 'MINUTES')            
+      }
+      
+      
+      stages
+      {
+      stage ('Checkout') 
+      {
+      steps {checkout scm }
+      }
+      stage ('Run Test Cases')
+      {
+      // condition should pass then only next step would run else it will skip but won't fail.
+      when  { branch 'development'}            
+      steps { sh label: 'Running Fabric Unit Tests', script: 'print Hello From jenkins'} 
+      }
+      }
+      }
+      
+© 2019 GitHub, Inc.
