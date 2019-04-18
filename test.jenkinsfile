@@ -24,7 +24,7 @@ pipeline {
       {
       // condition should pass then only next step would run else it will skip but won't fail.
       when  { branch 'develop'}            
-      steps { sh label: 'Running Fabric Unit Tests', script: 'print Hello From jenkins'} 
+      steps { sh label: 'Running Fabric Unit Tests', script: 'echo Hello From jenkins'} 
       }
       }
       }
