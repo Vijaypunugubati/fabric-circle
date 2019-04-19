@@ -18,7 +18,7 @@ pipeline {
         ARCH="amd64"
         GO111MODULE = 'on'
         GOVER = "1.11.5"
-        GOPATH = "$WORKSPACE/gopath"
+        GOPATH = "$WORKSPACE/path"
         GOROOT = "/opt/go/go" + "GO_VER" + ".linux." + "$MARCH"
         PATH = "$GOPATH/bin:$GOROOT/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:${GOVER}/bin:$PATH"
       }
