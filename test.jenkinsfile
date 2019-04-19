@@ -54,12 +54,19 @@ pipeline {
                     sh label: 'Running Fabric Integration Tests', script: 'make integration-test'        
                 }
         }
-        post {
+        stage('Archive') {     
+      steps {
+        echo "Archive Logs"
+      }
+      post {
+        success {
+          echo "Success"
+        }
         always {
-          // Archiving the .log files and ignore if empty
+            // Archiving the .log files and ignore if empty
           archiveArtifacts artifacts: '**/*.log', allowEmptyArchive: true
         }
-      } // post
+		} //post
       } // stages
       
 } // pipeline
