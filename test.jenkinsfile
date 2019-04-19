@@ -16,9 +16,9 @@ pipeline {
       
       environment {
         ARCH="amd64"
-        GO111MODULE = 'on'
-        GOVER = "1.11.5"
-        GOPATH = "gopath/src/github.com/vijaypunugubati/fabric"
+        //GO111MODULE = 'on'
+        GOVER = "go-1.11.5"
+        GOPATH = "$WORK_SPACE/path"
         GOROOT = "/opt/go/go" + "GO_VER" + ".linux." + "$MARCH"
         PATH = "$GOPATH/bin:$GOROOT/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:${GOVER}/bin:$PATH"
       }
