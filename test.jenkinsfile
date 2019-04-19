@@ -1,8 +1,10 @@
-def path  = "go/src/github.com/hyperledger/fabric"
+def path  = "gopath/src/github.com/vijaypunugubati/fabric"
 
 pipeline {
     agent any
-    
+      tools {
+        go 'go-1.11.5'
+      }
       options 
       {
       //To Ristrict the number of builds to be visible on jenkins
@@ -14,31 +16,22 @@ pipeline {
       
       environment {
         ARCH="amd64"
-        GOVER="1.11.5"
-        GOROOT="${env.WORKSPACE}/go${env.GOVER}/go"
-        GOPATH="${env.WORKSPACE}/go"
-        PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:${env.GOROOT}/bin:${env.GOPATH}/bin"
+        GO111MODULE = 'on'
+        GOVER = "1.11.5"
+        GOPATH = "$WORKSPACE/gopath"
+        GOROOT = "/opt/go/go" + "GO_VER" + ".linux." + "$MARCH"
+        PATH = "$GOPATH/bin:$GOROOT/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:${GOVER}/bin:$PATH"
       }
       
       stages
       {
-        stage('Setup Environment') {
-            steps {
-                cleanWs deleteDirs: true
-                sh label: "Create GOROOT Directory", script: "mkdir -p go${GOVER}"
-                sh label: "Create GOPATH Directory", script: "mkdir -p go/src/github.com/hyperledger/fabric"
-                sh label: "Download Go ${env.GOVER}", script: "wget -nv https://dl.google.com/go/go${GOVER}.linux-${ARCH}.tar.gz"
-                sh label: "Extract Go ${env.GOVER}", script: "tar -C ./go${GOVER} -xzf go${GOVER}.linux-${ARCH}.tar.gz"
-                sh label: "Remove Go ${env.GOVER} tarball", script: "rm -rf go${GOVER}.linux-${ARCH}.tar.gz"
-            }
-        } 
         stage ('Checkout') {
             steps {checkout scm }
         }
         stage ('Run Test Cases on develop') {
         // condition should pass then only next step would run else it will skip but won't fail.
             when { branch 'develop'}            
-                steps { dir('path')
+                steps { dir(path)
                     sh label: 'Running Fabric Unit Tests', script: 'make unit-test'
                     sh label: 'Running Fabric Integration Tests', script: 'make integration-test'
                     sh label: 'Promote to QA', script: "git checkout QA; git merge origin/develop; git push origin QA;"
@@ -50,16 +43,7 @@ pipeline {
                 steps { dir('path')
                     sh label: 'Running Fabric Unit Tests', script: 'make unit-test'
                     sh label: 'Running Fabric Integration Tests', script: 'make integration-test'
-                    sh label: 'Promote to e2e', script: "git checkout e2e; git merge origin/QA; git push origin e2e;"
-                }
-        }
-        stage ('Run Test Cases on e2e') {
-        // condition should pass then only next step would run else it will skip but won't fail.            
-            when { branch 'e2e'}            
-                steps { dir('path')
-                    sh label: 'Running Fabric Unit Tests', script: 'make unit-test'
-                    sh label: 'Running Fabric Integration Tests', script: 'make integration-test'
-                    sh label: 'Promote to master', script: "git checkout master; git merge origin/e2e; git push origin master;"
+                    sh label: 'Promote to master', script: "git checkout master; git merge origin/QA; git push origin master;"
                 }
         }
         stage ('Run Test Cases on master') {
