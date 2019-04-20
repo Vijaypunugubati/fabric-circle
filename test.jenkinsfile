@@ -1,9 +1,14 @@
-def path  = "gopath/src/github.com/vijaypunugubati/fabric"
+ // def ws = "go/src/github.com/Vijaypunugubati/fabric"
 
 pipeline {
     agent any
+      /**
+     * tools to auto-install and put on the PATH
+     * some of the supported tools - go, nodejs
+     */
       tools {
-        go 'go-1.11.5'
+        go '1.11.5'
+        nodejs 'nodejs-8.11.3'
       }
       options 
       {
@@ -16,33 +21,47 @@ pipeline {
       
       environment {
         ARCH="amd64"
-        //GO111MODULE = 'on'
-        GOVER = "go-1.11.5"
-        GOPATH = "$WORK_SPACE/path"
-        GOROOT = "/opt/go/go" + "GO_VER" + ".linux." + "$MARCH"
-        PATH = "$GOPATH/bin:$GOROOT/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:${GOVER}/bin:$PATH"
+        GOVER="go version"
+        GOROOT="${env.WORKSPACE}/go${env.GOVER}/go"
+        GOPATH="${env.WORKSPACE}/go"
+        PATH="/usr/local/sbin:${env.GOPATH}:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:${env.GOROOT}/bin:${env.GOPATH}/bin:$PATH"
       }
-      
+        
       stages
       {
-        stage ('Checkout') {
-            steps {checkout scm }
+        stage ('Checkout scm') {
+            steps {
+                cleanWs deleteDirs: true
+                sh label: "Create GOROOT Directory", script: "mkdir -p go${GOVER}"
+                sh label: "Create GOPATH Directory", script: "mkdir -p go/src/github.com/Vijaypunugubati/fabric"
+                dir('go/src/github.com/Vijaypunugubati/fabric') {
+                    checkout scm
+                }
+            }      
         }
         stage ('Run Test Cases on develop') {
         // condition should pass then only next step would run else it will skip but won't fail.
             when { branch 'develop'}            
-                steps { dir(path)
+                steps {
+                  dir('go/src/github.com/Vijaypunugubati/fabric') {
                     sh label: 'Running Fabric Unit Tests', script: 'make unit-test'
                     sh label: 'Running Fabric Integration Tests', script: 'make integration-test'
+                  }  
+                }
+        }
+        stage ('Merge on develop') {
+        // condition should pass then only next step would run else it will skip but won't fail.
+            when { branch 'develop'}            
+                steps { dir(path)
+                    sh label: 'Running Fabric Unit Tests', script: 'make unit-test'
                     sh label: 'Promote to QA', script: "git checkout QA; git merge origin/develop; git push origin QA;"
                 }
-        }        
-        stage ('Run Test Cases on QA') {
+        }             
+        stage ('Run e2e Tests on QA') {
         // condition should pass then only next step would run else it will skip but won't fail.          
             when { branch 'QA'}            
                 steps { dir('path')
-                    sh label: 'Running Fabric Unit Tests', script: 'make unit-test'
-                    sh label: 'Running Fabric Integration Tests', script: 'make integration-test'
+                    //Run e2e tests on PR from develop branch
                     sh label: 'Promote to master', script: "git checkout master; git merge origin/QA; git push origin master;"
                 }
         }
@@ -50,8 +69,7 @@ pipeline {
         // condition should pass then only next step would run else it will skip but won't fail.            
             when { branch 'master'}            
                 steps { dir('path')
-                    sh label: 'Running Fabric Unit Tests', script: 'make unit-test'
-                    sh label: 'Running Fabric Integration Tests', script: 'make integration-test'        
+                    //Build artifacts and publish to nexus        
                 }
         }
         stage('Archive') {     
