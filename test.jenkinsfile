@@ -43,7 +43,7 @@ pipeline {
                 steps {
                   dir('go/src/github.com/Vijaypunugubati/fabric') {
                     sh label: 'Running Fabric Unit Tests', script: 'echo "unit-test"'
-                    sh label: 'Promote to QA', script: "git checkout QA; git merge origin/develop; git push origin QA;"
+                    sh label: 'Promote to QA', script: "git checkout QA"; "git merge origin/develop"; "git push origin QA";
                   }  
                 }
         }          
