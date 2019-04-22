@@ -15,19 +15,33 @@ pipeline {
 	  
       options 
       {
-	  
       //To Ristrict the number of builds to be visible on jenkins
       // we don't fill up our storage!
       buildDiscarder(logRotator(numToKeepStr:'15', artifactNumToKeepStr: '15'))
-	  
       //To Timeout
       timeout(time: 10, unit: 'MINUTES')            
       }
+
       stages
       {
-      stage ('Checkout') 
-      {
-      steps {checkout scm }
+          stage ('Checkout') 
+          {
+            steps {
+              cleanWs deleteDirs: true
+              dir('go/src/github.com/Vijaypunugubati/fabric') {
+              checkout scm
+              }
+            }
+          }
+          stage ('Run Tests on NewPR') {
+          // condition should pass then only next step would run else it will skip but won't fail.
+            when { branch 'develop'}          
+                steps {
+                  dir('go/src/github.com/Vijaypunugubati/fabric') {
+                    sh label: 'Running Fabric Unit Tests', script: 'echo "unit-test"'
+                    sh label: 'Running Fabric Integration Tests', script: 'echo "Integration-test"' 
+                  }  
+                }
+          }         
       }
-      }
-      }
+}      

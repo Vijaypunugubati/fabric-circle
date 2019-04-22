@@ -1,5 +1,3 @@
- // def ws = "go/src/github.com/Vijaypunugubati/fabric"
-
 pipeline {
     agent any
       /**
@@ -21,10 +19,10 @@ pipeline {
       
       environment {
         ARCH="amd64"
-        GOVER="go version"
-        GOROOT="${env.WORKSPACE}/go${env.GOVER}/go"
-        GOPATH="${env.WORKSPACE}/go"
-        PATH="/usr/local/sbin:${env.GOPATH}:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:${env.GOROOT}/bin:${env.GOPATH}/bin:$PATH"
+        //GOVER="go version"
+        //GOROOT="${env.WORKSPACE}/go${env.GOVER}/go"
+        //GOPATH="${env.WORKSPACE}/go"
+        //PATH="/usr/local/sbin:${env.GOPATH}:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:${env.GOROOT}/bin:${env.GOPATH}/bin:$PATH"
       }
         
       stages
@@ -32,45 +30,44 @@ pipeline {
         stage ('Checkout scm') {
             steps {
                 cleanWs deleteDirs: true
-                sh label: "Create GOROOT Directory", script: "mkdir -p go${GOVER}"
-                sh label: "Create GOPATH Directory", script: "mkdir -p go/src/github.com/Vijaypunugubati/fabric"
+                //sh label: "Create GOROOT Directory", script: "mkdir -p go${GOVER}"
+                //sh label: "Create GOPATH Directory", script: "mkdir -p go/src/github.com/Vijaypunugubati/fabric"
                 dir('go/src/github.com/Vijaypunugubati/fabric') {
                     checkout scm
                 }
             }      
         }
-        stage ('Run Test Cases on develop') {
+        stage ('Run UnitTests on Merge') {
         // condition should pass then only next step would run else it will skip but won't fail.
-            when { branch 'develop'}            
+            when { branch 'develop'}          
                 steps {
                   dir('go/src/github.com/Vijaypunugubati/fabric') {
-                    sh label: 'Running Fabric Unit Tests', script: 'make unit-test'
-                    sh label: 'Running Fabric Integration Tests', script: 'make integration-test'
+                    sh label: 'Running Fabric Unit Tests', script: 'echo "unit-test"'
+                    sh label: 'Promote to QA', script: "git checkout QA; git merge origin/develop; git push origin QA;"
                   }  
                 }
-        }
-        stage ('Merge on develop') {
-        // condition should pass then only next step would run else it will skip but won't fail.
-            when { branch 'develop'}            
-                steps { dir(path)
-                    sh label: 'Running Fabric Unit Tests', script: 'make unit-test'
-                    sh label: 'Promote to QA', script: "git checkout QA; git merge origin/develop; git push origin QA;"
-                }
-        }             
+        }          
         stage ('Run e2e Tests on QA') {
         // condition should pass then only next step would run else it will skip but won't fail.          
             when { branch 'QA'}            
-                steps { dir('path')
+                steps {
+                  dir('go/src/github.com/Vijaypunugubati/fabric') {
                     //Run e2e tests on PR from develop branch
+                    sh label: 'Running e2e Tests', script: 'echo "Running the e2e Tests"'
                     sh label: 'Promote to master', script: "git checkout master; git merge origin/QA; git push origin master;"
-                }
+                  }
+                }  
         }
-        stage ('Run Test Cases on master') {
+        stage ('Build and Publish on master') {
         // condition should pass then only next step would run else it will skip but won't fail.            
             when { branch 'master'}            
-                steps { dir('path')
-                    //Build artifacts and publish to nexus        
-                }
+                steps {
+                  dir('go/src/github.com/Vijaypunugubati/fabric') {
+                    //Build artifacts and publish to nexus
+                    sh label: 'Build Images', script: 'echo "Building Images"'
+                    sh label: 'Publish Images', script: 'echo "Publish Images"'
+                  }
+                }  
         }
         stage('Archive') {     
       steps {
