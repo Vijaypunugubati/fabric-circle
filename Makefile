@@ -2,12 +2,10 @@
 # Copyright London Stock Exchange Group All Rights Reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
-#
 # -------------------------------------------------------------
 # This makefile defines the following targets
 #
 #   - all (default) - builds all targets and runs all non-integration tests/checks
-#   - checks - runs all non-integration tests/checks
 #   - desk-check - runs linters and verify to test changed packages
 #   - configtxgen - builds a native configtxgen binary
 #   - configtxlator - builds a native configtxlator binary
