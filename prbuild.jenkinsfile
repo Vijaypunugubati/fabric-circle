@@ -35,7 +35,7 @@ pipeline {
           }
           stage ('Run Tests on NewPR') {
           // condition should pass then only next step would run else it will skip but won't fail.
-            when { branch 'develop'}          
+            // when { branch 'develop'}          
                 steps {
                   dir('go/src/github.com/Vijaypunugubati/fabric') {
                     sh label: 'Running Fabric Unit Tests', script: 'echo "unit-test"'
