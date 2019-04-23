@@ -1,0 +1,17 @@
+pipeline {
+    agent any
+	stages
+      {
+        stage ('Checkout scm') {
+            steps {checkout scm	}
+					}
+		stage ('Run UnitTests on Merge') {
+                steps {
+                     bat ''' git checkout  QA
+                             git pull origin  QA
+                             git merge origin/develop
+                             git push -u origin QA '''
+                       }
+                       }
+                       }  
+		       }
