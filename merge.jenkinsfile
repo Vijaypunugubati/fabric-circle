@@ -10,7 +10,7 @@ pipeline {
                      sh ''' git checkout  QA
                              git pull origin  QA
                              git merge origin/develop
-                             git push -u origin ghttps://github.com/Vijaypunugubati/fabric.git QA '''
+                             git push -u origin https://github.com/Vijaypunugubati/fabric.git QA '''
                        }
                        }
                        }  
