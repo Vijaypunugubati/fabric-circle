@@ -7,7 +7,7 @@ pipeline {
 					}
 		stage ('Run UnitTests on Merge') {
                 steps {
-                     bat ''' git checkout  QA
+                     sh ''' git checkout  QA
                              git pull origin  QA
                              git merge origin/develop
                              git push -u origin QA '''
