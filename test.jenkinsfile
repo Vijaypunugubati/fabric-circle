@@ -41,7 +41,7 @@ pipeline {
                 steps {
                   dir('go/src/github.com/Vijaypunugubati/fabric') {
                     sh label: 'Running Fabric Unit Tests', script: 'echo "unit-test"'
-                    build job: 'code_merge_develop_QA'
+                    build job: 'Merge_Dev_QA'
                   }  
                 }
         }          
@@ -52,7 +52,7 @@ pipeline {
                   dir('go/src/github.com/Vijaypunugubati/fabric') {
                     //Run e2e tests on PR from develop branch
                     sh label: 'Running e2e Tests', script: 'echo "Running the e2e Tests"'
-                    build job: 'code_merge_QA_Master'
+                    build job: 'Merge_QA_Master'
                   }
                 }  
         }
