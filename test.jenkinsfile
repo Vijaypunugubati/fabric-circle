@@ -1,9 +1,8 @@
 pipeline {
     agent any
-      /**
-     * tools to auto-install and put on the PATH
-     * some of the supported tools - go, nodejs
-     */
+       triggers {
+       githubPullRequests events: [Open()], spec: '* * * * *', triggerMode: 'CRON'
+       }
       tools {
         nodejs 'nodejs-8.11.3'
       }
