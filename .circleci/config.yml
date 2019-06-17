@@ -26,7 +26,7 @@ pull-binaries: &pull-binaries
   - run:
       command: |
         cd $working_directory || exit
-        for IMAGES in releaseclean release; do
+        for IMAGES in release-clean release; do
           make $IMAGES; done
 
 #### Filters for ensuring builds only run on specific branches ####
