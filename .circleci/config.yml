@@ -98,7 +98,7 @@ jobs:
             git clone -b master https://github.com/hyperledger/fabric-sdk-node $WD
             cd $WD || exit
             npm -v
-            npm install -g gulp
+            npm install gulp
             gulp install-and-generate-certs
             gulp run-end-to-end
           no_output_timeout: 60m
