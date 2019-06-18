@@ -22,6 +22,15 @@ install-go: &install-go
 add-java-repo: &add-java-repo
   - run: sudo add-apt-repository ppa:openjdk-r/ppa
 
+#### Filters for ensuring builds only run on specific branches ####
+
+filter-pr-only: &filter-pr-only
+  filters:
+    branches:
+      ignore:
+        - develop
+        - QA
+
 pull-fabric-artifacts: &pull-fabric-artifacts
   - run:
       command: |
