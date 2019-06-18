@@ -8,7 +8,7 @@ setup-environment: &setup-environment
   machine:
     image: ubuntu-1604:201903-01
   resource_class: large
-  working_directory: /home/circleci/go/src/github.com/Vijaypunugubati/fabric
+  working_directory: /home/circleci/project
 
 install-packages: &install-packages
   - run: sudo apt-get update && sudo apt-get install -qq -y gcc libtool make
@@ -22,6 +22,20 @@ install-go: &install-go
 add-java-repo: &add-java-repo
   - run: sudo add-apt-repository ppa:openjdk-r/ppa
 
+pull-fabric-artifacts: &pull-fabric-artifacts
+  - run:
+      command: |
+        docker version
+        docker-compose version
+        for IMAGES in baseos peer orderer ccenv tools nodeenv javaenv ca; do
+          docker pull nexus3.hyperledger.org:10001/hyperledger/fabric-$IMAGES:amd64-latest; done
+
+pull-thirdparty: &pull-thirdparty
+  - run:
+      command: |
+        for IMAGES in couchdb kafka zookeeper; do
+          docker pull hyperledger/fabric-$IMAGES:amd64-0.4.15; done
+
 pull-binaries: &pull-binaries
   - run:
       command: |
@@ -29,38 +43,32 @@ pull-binaries: &pull-binaries
         for IMAGES in release-clean release; do
           make $IMAGES; done
 
-#### Filters for ensuring builds only run on specific branches ####
-
-filter-pr-only: &filter-pr-only
-  filters:
-    branches:
-      ignore:
-        - develop
-        - QA
-
 jobs:    
-  byfn-eyfn:
+  sdk-java-tests:
     machine:
       image: ubuntu-1604:201903-01
     environment:
-      WORKSPACE: /home/circleci/go/src/github.com/Vijaypunugubati/fabric-samples
+      WORKSPACE: /home/circleci/project/fabric-sdk-java
       # BASE_DIR:  go/src/github.com/hyperledger/fabric-samples
     steps:
       - <<: *add-java-repo
       - <<: *install-e2e-packages
       - <<: *install-go
-      - <<: *pull-binaries
+      - <<: *pull-fabric-artifacts
+      - <<: *pull-thirdparty
       - run:
-          name: BYFN-EYFN
+          name: SDK-JAVA-TESTS
           command: |
-            git clone -b master https://github.com/hyperledger/fabric-samples $WORKSPACE
+            git clone -b master https://github.com/hyperledger/fabric-sdk-java $WORKSPACE
             cd $WORKSPACE || exit
-            cp -r $working_directory/home/circleci/project/fabric/release/linux-amd64/bin/ .
-            git checkout master
+            export GOPATH=$WD/src/test/fixture
+            cd $WD/src/test
+            chmod +x cirun.sh
+            source cirun.shcripts
           no_output_timeout: 60m
 
 workflows:
   version: 2.1
   fabric:
     jobs:
-      - byfn-eyfn
+      - sdk-java-tests
