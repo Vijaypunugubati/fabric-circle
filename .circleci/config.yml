@@ -54,11 +54,11 @@ install-node-packages: &install-node-packages
   - run:
       name: Install-Node-Packages
       command: |
+        export NVM_DIR="/opt/circleci/.nvm"
+        source $NVM_DIR/nvm.sh
         wget -qO- https://raw.githubusercontent.com/creationix/nvm/v0.33.11/install.sh | bash
         nvm install stable
         npm init
-        npm install gulp
-        npm install gulp -g
         # source $NVM_DIR/nvm.sh
 
 filter-pr-only: &filter-pr-only
@@ -102,7 +102,7 @@ jobs:
       - <<: *install-e2e-packages
       - <<: *install-go
       - <<: *pull-fabric-artifacts
-      - <<: *pull-thirdparty
+      # - <<: *pull-thirdparty
       - <<: *install-node-packages
       - run:
           name: E2E-SDK-NODE
@@ -111,6 +111,8 @@ jobs:
             cd $WD || exit
             npm -v
             nvm -v
+            npm install gulp
+            npm install gulp -g
             gulp install-and-generate-certs
             gulp run-end-to-end
           no_output_timeout: 60m
