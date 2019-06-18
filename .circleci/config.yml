@@ -98,7 +98,6 @@ jobs:
             git clone -b master https://github.com/hyperledger/fabric-sdk-node $WD
             cd $WD || exit
             npm -v
-            nvm -v
             npm install -g gulp
             gulp install-and-generate-certs
             gulp run-end-to-end
