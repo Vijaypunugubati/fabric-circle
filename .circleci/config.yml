@@ -6,7 +6,7 @@ version: 2.1
 
 orbs:
   docker: circleci/docker@0.5.0
-  node: circleci/node@1.0.1
+  # node: circleci/node@1.0.1
 
 #### Utilities for setting up the environment ####
 
@@ -50,6 +50,17 @@ add-java-repo: &add-java-repo
       name: Add Java Repo
       command: sudo add-apt-repository ppa:openjdk-r/ppa
 
+install-node-packages: &install-node-packages
+  - run:
+      name: Install-Node-Packages
+      command: |
+        wget -qO- https://raw.githubusercontent.com/creationix/nvm/v0.33.11/install.sh | bash
+        nvm install stable
+        npm init
+        npm install gulp
+        npm install gulp -g
+        # source $NVM_DIR/nvm.sh
+
 filter-pr-only: &filter-pr-only
   filters:
     branches:
@@ -92,15 +103,14 @@ jobs:
       - <<: *install-go
       - <<: *pull-fabric-artifacts
       - <<: *pull-thirdparty
+      - <<: *install-node-packages
       - run:
           name: E2E-SDK-NODE
           command: |
             git clone -b master https://github.com/hyperledger/fabric-sdk-node $WD
             cd $WD || exit
-            set -x
-            echo "INSTALL GULP"
-            # npm link gulp
-            npm install gulp
+            npm -v
+            nvm -v
             gulp install-and-generate-certs
             gulp run-end-to-end
           no_output_timeout: 60m
