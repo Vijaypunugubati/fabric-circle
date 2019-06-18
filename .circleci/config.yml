@@ -54,12 +54,10 @@ install-node-packages: &install-node-packages
   - run:
       name: Install-Node-Packages
       command: |
+        wget -qO- https://raw.githubusercontent.com/creationix/nvm/v0.33.11/install.sh | bash
         export NVM_DIR="/opt/circleci/.nvm"
         source $NVM_DIR/nvm.sh
-        wget -qO- https://raw.githubusercontent.com/creationix/nvm/v0.33.11/install.sh | bash
         nvm install stable
-        npm init
-        # source $NVM_DIR/nvm.sh
 
 filter-pr-only: &filter-pr-only
   filters:
@@ -101,7 +99,7 @@ jobs:
       - <<: *add-java-repo
       - <<: *install-e2e-packages
       - <<: *install-go
-      - <<: *pull-fabric-artifacts
+      # - <<: *pull-fabric-artifacts
       # - <<: *pull-thirdparty
       - <<: *install-node-packages
       - run:
@@ -109,9 +107,8 @@ jobs:
           command: |
             git clone -b master https://github.com/hyperledger/fabric-sdk-node $WD
             cd $WD || exit
-            npm -v
-            nvm -v
-            npm install gulp
+            node --version
+            npm --version
             npm install gulp -g
             gulp install-and-generate-certs
             gulp run-end-to-end
