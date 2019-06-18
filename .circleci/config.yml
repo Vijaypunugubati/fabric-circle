@@ -62,9 +62,9 @@ jobs:
             git clone -b master https://github.com/hyperledger/fabric-sdk-java $WORKSPACE
             cd $WORKSPACE || exit
             export GOPATH=$WD/src/test/fixture
-            cd $WD/src/test
+            cd $WORKSPACE/src/test
             chmod +x cirun.sh
-            source cirun.shcripts
+            source cirun.sh
           no_output_timeout: 60m
 
 workflows:
