@@ -1,28 +1,54 @@
-# SPDX-License-Identifier: Apache-2.0
+#
+#SPDX-License-Identifier: Apache-2.0
+#
+
 version: 2.1
 
 orbs:
-    docker: circleci/docker@0.5.0
+  docker: circleci/docker@0.5.0
+  node: circleci/node@1.0.1
+
+#### Utilities for setting up the environment ####
 
 setup-environment: &setup-environment
   machine:
     image: ubuntu-1604:201903-01
   resource_class: large
-  working_directory: /home/circleci/project
+  working_directory: /home/circleci/go/src/github.com/hyperledger/fabric
+
+#### Utilities for adding packages vie the package manager ####
 
 install-packages: &install-packages
-  - run: sudo apt-get update && sudo apt-get install -qq -y gcc libtool make
+  - run:
+      name: Install Dependencies
+      command: sudo apt-get update && sudo apt-get install -qq -y gcc libtool make
+
+install-doc-packages: &install-doc-packages
+  - run:
+      name: Install Dependencies
+      command: sudo apt-get update && sudo apt-get install -qq -y tox
 
 install-e2e-packages: &install-e2e-packages
-  - run: sudo apt-get update && sudo apt-get install -qq -y gcc libtool make openjdk-8-jdk
-  
+  - run:
+      name: Install Dependencies
+      command: sudo apt-get update && sudo apt-get install -qq -y gcc libtool make openjdk-8-jdk
+
+#### Utilities for managing 3rd party dependencies ####
+
 install-go: &install-go
-  - run: wget -qO- https://dl.google.com/go/go1.12.5.linux-amd64.tar.gz | sudo tar -xvz -C /usr/bin
+  - run:
+      name: Install Golang ${GO_VER}
+      command: wget -qO- https://dl.google.com/go/go1.12.5.linux-amd64.tar.gz | sudo tar -xvz -C /usr/bin
+
+install-pip: &install-pip
+  - run:
+      name: Install PIP
+      command: curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && python get-pip.py
 
 add-java-repo: &add-java-repo
-  - run: sudo add-apt-repository ppa:openjdk-r/ppa
-
-#### Filters for ensuring builds only run on specific branches ####
+  - run:
+      name: Add Java Repo
+      command: sudo add-apt-repository ppa:openjdk-r/ppa
 
 filter-pr-only: &filter-pr-only
   filters:
@@ -33,31 +59,32 @@ filter-pr-only: &filter-pr-only
 
 pull-fabric-artifacts: &pull-fabric-artifacts
   - run:
+      name: Pull fabric images from nexus
       command: |
-        docker version
-        docker-compose version
         for IMAGES in baseos peer orderer ccenv tools nodeenv javaenv ca; do
           docker pull nexus3.hyperledger.org:10001/hyperledger/fabric-$IMAGES:amd64-latest; done
 
 pull-thirdparty: &pull-thirdparty
   - run:
+      name: Pull thirdparty images from docker
       command: |
         for IMAGES in couchdb kafka zookeeper; do
           docker pull hyperledger/fabric-$IMAGES:amd64-0.4.15; done
 
 pull-binaries: &pull-binaries
   - run:
+      name: Pull fabric binaries from nexus
       command: |
         cd $working_directory || exit
-        for IMAGES in release-clean release; do
-          make $IMAGES; done
+        for BIN in release-clean release; do
+          make $BIN; done
 
 jobs:    
-  sdk-java-tests:
+  e2e-sdk-node:
     machine:
       image: ubuntu-1604:201903-01
     environment:
-      WD: /home/circleci/project/fabric-sdk-java
+      WORKSPACE: /home/circleci/project/fabric-sdk-node
       # BASE_DIR:  go/src/github.com/hyperledger/fabric-samples
     steps:
       - <<: *add-java-repo
@@ -66,18 +93,15 @@ jobs:
       - <<: *pull-fabric-artifacts
       - <<: *pull-thirdparty
       - run:
-          name: SDK-JAVA-TESTS
+          name: E2E-SDK-NODE
           command: |
-            git clone -b master https://github.com/hyperledger/fabric-sdk-java $WD
+            git clone -b master https://github.com/hyperledger/fabric-sdk-node $WD
             cd $WD || exit
-            export GOPATH=$WD/src/test/fixture
-            cd $WD/src/test
-            chmod +x cirun.sh
-            source cirun.sh
+            npm -v
           no_output_timeout: 60m
 
 workflows:
   version: 2.1
   fabric:
     jobs:
-      - sdk-java-tests
+      - e2e-sdk-node
