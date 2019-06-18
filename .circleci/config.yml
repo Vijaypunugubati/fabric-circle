@@ -57,7 +57,7 @@ install-node-packages: &install-node-packages
         wget -qO- https://raw.githubusercontent.com/creationix/nvm/v0.33.11/install.sh | bash
         export NVM_DIR="/opt/circleci/.nvm"
         source $NVM_DIR/nvm.sh
-        nvm install stable
+        nvm install 10.15.3
 
 filter-pr-only: &filter-pr-only
   filters:
@@ -109,6 +109,7 @@ jobs:
             cd $WD || exit
             node --version
             npm --version
+            npm install gulp
             npm install gulp -g
             gulp install-and-generate-certs
             gulp run-end-to-end
